@@ -778,13 +778,8 @@ footer {
 //   Set window.YTGRAB_API in an env-injected meta tag if needed,
 //   otherwise it defaults to the current page's origin.
 // ────────────────────────────────────────────────────────
-const API = (() => {
-  // If there's a meta tag with a custom API url, use it
-  const meta = document.querySelector('meta[name="api-base"]');
-  if (meta) return meta.content.replace(/\/$/, '');
-  // Otherwise use same origin (works for both local and Render)
-  return window.location.origin === 'null' ? 'http://localhost:3737' : '';
-})();
+// API is always empty string = same origin (works local + Render)
+const API = '';
 
 let selQ    = '720p';
 let selFmt  = 'mp4';
@@ -801,7 +796,7 @@ const QUALS = [
 // ── CHECK BACKEND ──
 async function checkBackend() {
   try {
-    const r = await fetch(API + '/ping', { signal: AbortSignal.timeout(4000) });
+    const r = await fetch(API + '/ping', { signal: AbortSignal.timeout(8000) });
     if (r.ok) document.getElementById('conn-pill').style.display = 'inline-flex';
   } catch {}
 }
@@ -909,7 +904,7 @@ function doDownload() {
 
   if (vidData?._demo) {
     sm.className = 'status-msg warn';
-    sm.innerHTML = `⚠️ &nbsp;Server not connected. Start <code>node server.js</code> and open <code>http://localhost:3737</code>`;
+    sm.innerHTML = `⚠️ &nbsp;Could not load video info. Please paste the URL again and click Fetch first.`;
     return;
   }
 
