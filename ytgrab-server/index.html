@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>YTGrab — Glass Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red: #FF3B3B;
+  --red2: #FF6B35;
+  --blue: #4FC3F7;
+  --purple: #B39DDB;
+  --green: #69F0AE;
+  --yellow: #FFD54F;
+  --white: rgba(255,255,255,1);
+  --glass-bg: rgba(255,255,255,0.06);
+  --glass-bg-hover: rgba(255,255,255,0.10);
+  --glass-bg-strong: rgba(255,255,255,0.13);
+  --glass-border: rgba(255,255,255,0.14);
+  --glass-border-hover: rgba(255,255,255,0.28);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.37), inset 0 1px 0 rgba(255,255,255,0.1);
+  --glass-shadow-lg: 0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+  --text: rgba(255,255,255,0.95);
+  --text-muted: rgba(255,255,255,0.45);
+  --text-subtle: rgba(255,255,255,0.25);
+  --blur: blur(20px);
+  --blur-strong: blur(40px);
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #070714;
+}
+
+/* ── ANIMATED BACKGROUND ── */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(255,59,59,0.25) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(79,195,247,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at 50% 90%, rgba(179,157,219,0.20) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 70%, rgba(105,240,174,0.10) 0%, transparent 50%);
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: drift linear infinite;
+}
+
+.orb-1 { width: 500px; height: 500px; background: rgba(255,59,59,0.35); top: -100px; left: -100px; animation-duration: 20s; }
+.orb-2 { width: 400px; height: 400px; background: rgba(79,195,247,0.25); top: 20%; right: -80px; animation-duration: 25s; animation-delay: -8s; }
+.orb-3 { width: 350px; height: 350px; background: rgba(179,157,219,0.3); bottom: 10%; left: 20%; animation-duration: 18s; animation-delay: -4s; }
+.orb-4 { width: 280px; height: 280px; background: rgba(105,240,174,0.2); bottom: -60px; right: 20%; animation-duration: 22s; animation-delay: -12s; }
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.05); }
+  66% { transform: translate(-20px, 30px) scale(0.95); }
+}
+
+/* Noise texture overlay */
+.bg-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* Mesh grid */
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* ── LAYOUT ── */
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 14px 0;
+}
+
+.nav-glass {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--glass-shadow);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.5px;
+}
+
+.logo-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--red), var(--red2));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(255,59,59,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.logo-icon svg { width: 16px; height: 16px; fill: white; }
+
+.nav-pills { display: flex; gap: 8px; align-items: center; }
+
+.pill {
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-muted);
+  backdrop-filter: blur(10px);
+}
+
+.pill.active {
+  background: rgba(105,240,174,0.12);
+  border-color: rgba(105,240,174,0.3);
+  color: var(--green);
+}
+
+.pill.active::before {
+  content: '●';
+  margin-right: 5px;
+  font-size: 8px;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── HERO ── */
+.hero {
+  padding: 60px 0 40px;
+  text-align: center;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 99px;
+  backdrop-filter: blur(12px);
+}
+
+.hero-eyebrow span {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: blink 1.5s infinite;
+}
+
+h1 {
+  font-size: clamp(40px, 7vw, 64px);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -2.5px;
+  margin-bottom: 18px;
+}
+
+.h1-line2 {
+  background: linear-gradient(90deg, var(--blue), var(--purple), var(--red));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.hero-sub {
+  font-size: 16px;
+  color: var(--text-muted);
+  max-width: 420px;
+  margin: 0 auto 40px;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* ── GLASS CARD ── */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  box-shadow: var(--glass-shadow);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+/* Top shimmer line on card */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+/* Subtle inner glow */
+.glass-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255,255,255,0.05), transparent);
+  pointer-events: none;
+}
+
+/* ── INPUT AREA ── */
+.input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.input-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  display: flex;
+}
+
+.input-icon svg { width: 17px; height: 17px; }
+
+#url-input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 14px 14px 14px 44px;
+  outline: none;
+  transition: all 0.25s;
+  backdrop-filter: blur(10px);
+}
+
+#url-input::placeholder { color: var(--text-subtle); }
+
+#url-input:focus {
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.09);
+  box-shadow: 0 0 0 3px rgba(79,195,247,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.paste-btn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+.paste-btn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: var(--glass-border-hover);
+  color: var(--text);
+}
+
+/* ── FETCH BUTTON ── */
+#fetch-btn {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(255,59,59,0.8), rgba(255,107,53,0.8));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,100,80,0.4);
+  border-radius: 12px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(255,59,59,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+  letter-spacing: 0.2px;
+}
+
+#fetch-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(255,59,59,0.95), rgba(255,107,53,0.95));
+  box-shadow: 0 6px 28px rgba(255,59,59,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+
+#fetch-btn:active:not(:disabled) { transform: translateY(0); }
+#fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading .spinner { display: block; }
+.loading .btn-txt { display: none; }
+
+/* ── ERROR ── */
+#error-box {
+  display: none;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(255,59,59,0.08);
+  border: 1px solid rgba(255,59,59,0.25);
+  border-radius: 12px;
+  font-size: 13px;
+  color: rgba(255,120,100,0.95);
+  gap: 8px;
+  align-items: flex-start;
+  backdrop-filter: blur(8px);
+}
+#error-box svg { width:15px;height:15px;flex-shrink:0;margin-top:1px; }
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+  margin: 24px 0;
+}
+
+/* ── RESULT PANEL ── */
+#result-panel { display: none; animation: fadeUp 0.35s ease; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Video meta */
+.video-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.thumb {
+  flex-shrink: 0;
+  width: 156px;
+  height: 88px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  position: relative;
+}
+
+.thumb img { width:100%;height:100%;object-fit:cover;display:none; }
+
+.thumb-placeholder {
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;color:var(--text-subtle);
+}
+
+.play-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(1px);
+}
+.play-overlay svg { width:28px;height:28px;fill:white;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+
+.meta-info { flex: 1; min-width: 0; }
+
+.video-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  backdrop-filter: blur(6px);
+}
+
+.tag.red { background: rgba(255,59,59,0.1); border-color: rgba(255,59,59,0.25); color: rgba(255,120,100,1); }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-subtle);
+  margin-bottom: 10px;
+}
+
+/* ── QUALITY GRID ── */
+.q-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.q-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.22s;
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+.q-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.q-card:hover { background: rgba(255,255,255,0.08); border-color: var(--glass-border-hover); }
+.q-card:hover::before { opacity: 1; }
+
+.q-card.selected {
+  background: rgba(79,195,247,0.1);
+  border-color: rgba(79,195,247,0.4);
+  box-shadow: 0 0 20px rgba(79,195,247,0.15), inset 0 1px 0 rgba(79,195,247,0.2);
+}
+
+.q-card.selected::before { opacity: 1; background: linear-gradient(90deg, transparent, rgba(79,195,247,0.4), transparent); }
+
+.q-card.unavail { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+.q-res { font-size: 19px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 2px; }
+.q-name { font-size: 10px; color: var(--text-muted); font-weight: 400; margin-bottom: 6px; }
+
+.q-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.q-chip.sd { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+.q-chip.hd { background: rgba(255,213,79,0.15); color: var(--yellow); }
+.q-chip.fhd { background: rgba(105,240,174,0.15); color: var(--green); }
+
+/* ── FORMAT TABS ── */
+.fmt-row { display: flex; gap: 8px; margin-bottom: 20px; }
+
+.fmt-btn {
+  flex: 1;
+  padding: 11px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.fmt-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: var(--glass-border-hover); }
+.fmt-btn.sel { background: rgba(179,157,219,0.12); border-color: rgba(179,157,219,0.35); color: var(--purple); box-shadow: 0 0 16px rgba(179,157,219,0.1); }
+.fmt-btn svg { width: 14px; height: 14px; }
+
+/* ── DOWNLOAD BTN ── */
+#dl-btn {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(105,240,174,0.75), rgba(79,195,247,0.65));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(105,240,174,0.3);
+  border-radius: 12px;
+  color: #0a2018;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transition: all 0.25s;
+  box-shadow: 0 4px 20px rgba(105,240,174,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+#dl-btn:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(105,240,174,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
+#dl-btn svg { width: 18px; height: 18px; }
+
+/* ── STATUS MSG ── */
+.status-msg {
+  display: none;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+  gap: 8px;
+  align-items: center;
+}
+
+.status-msg.ok { background: rgba(105,240,174,0.08); border: 1px solid rgba(105,240,174,0.2); color: rgba(105,240,174,0.9); display: flex; }
+.status-msg.warn { background: rgba(255,213,79,0.08); border: 1px solid rgba(255,213,79,0.2); color: rgba(255,213,79,0.9); display: flex; }
+
+/* ── SETUP GUIDE ── */
+.setup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.setup-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.setup-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+/* Steps */
+.steps { display: flex; flex-direction: column; gap: 0; }
+
+.step {
+  display: flex;
+  gap: 0;
+  position: relative;
+}
+
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 36px;
+  bottom: -8px;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--glass-border), transparent);
+}
+
+.step-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 18px;
+  padding-top: 2px;
+}
+
+.step-num {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.step-body {
+  flex: 1;
+  padding-bottom: 28px;
+}
+
+.step-head {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  margin-top: 6px;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 10px;
+}
+
+.step-desc b { color: rgba(255,255,255,0.75); font-weight: 600; }
+.step-desc code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 5px; }
+
+/* Code blocks */
+.code-wrap {
+  position: relative;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  margin-top: 8px;
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+}
+
+.code-lang {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.copy-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.copy-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+.code-content {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  padding: 14px 16px;
+  color: rgba(255,255,255,0.75);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* Syntax highlights */
+.code-content .c { color: rgba(105,240,174,0.8); } /* green - strings/values */
+.code-content .k { color: rgba(179,157,219,0.9); } /* purple - keywords */
+.code-content .m { color: rgba(255,213,79,0.8); }  /* yellow - numbers */
+.code-content .comment { color: rgba(255,255,255,0.3); font-style: italic; }
+
+/* ── TIP BOX ── */
+.tip-box {
+  background: rgba(79,195,247,0.06);
+  border: 1px solid rgba(79,195,247,0.18);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: rgba(79,195,247,0.85);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  backdrop-filter: blur(8px);
+}
+
+.tip-box svg { width:15px;height:15px;flex-shrink:0;margin-top:1px; }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 30px 0 40px;
+  margin-top: 10px;
+}
+
+.foot-text {
+  font-size: 12px;
+  color: var(--text-subtle);
+  line-height: 1.7;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.foot-text a { color: rgba(255,120,100,0.7); text-decoration: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 580px) {
+  .input-group { flex-direction: column; }
+  .paste-btn { padding: 13px; }
+  .video-meta { flex-direction: column; }
+  .thumb { width: 100%; height: 150px; }
+  .q-grid { grid-template-columns: repeat(2, 1fr); }
+  h1 { letter-spacing: -1.5px; }
+  .glass-card { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="bg-gradient"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="orb orb-4"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-glass">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.5a8.28 8.28 0 004.84 1.56V6.62a4.85 4.85 0 01-1.07.07z"/></svg>
+      </div>
+      YTGrab
+    </div>
+    <div class="nav-pills">
+      <span class="pill">Glass Edition</span>
+      <span class="pill active" id="conn-pill" style="display:none">Connected</span>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow"><span></span> Free &amp; Private — No Ads</div>
+    <h1>Download YouTube<br><span class="h1-line2">Beautifully.</span></h1>
+    <p class="hero-sub">360p to 1080p HD. Everything runs on your machine — zero tracking, zero limits, zero uploads.</p>
+  </div>
+
+  <!-- MAIN GLASS CARD -->
+  <div class="glass-card">
+
+    <!-- URL Input -->
+    <div class="input-group">
+      <div class="input-wrap">
+        <div class="input-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <input id="url-input" type="text" placeholder="Paste YouTube URL… e.g. https://youtube.com/watch?v=..." autocomplete="off" spellcheck="false"/>
+      </div>
+      <button class="paste-btn" onclick="pasteURL()">⌘ Paste</button>
+    </div>
+
+    <button id="fetch-btn" onclick="fetchVideo()">
+      <span class="spinner" id="spinner"></span>
+      <span class="btn-txt">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        Fetch Video Info
+      </span>
+    </button>
+
+    <!-- Error -->
+    <div id="error-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
+      <span id="error-txt">Something went wrong.</span>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div id="result-panel">
+      <div class="divider"></div>
+
+      <!-- Video info -->
+      <div class="video-meta">
+        <div class="thumb" id="thumb-box">
+          <div class="thumb-placeholder" id="thumb-ph">▶</div>
+          <img id="thumb-img" src="" alt=""/>
+          <div class="play-overlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <div class="meta-info">
+          <div class="video-title" id="vid-title">—</div>
+          <div class="tags">
+            <span class="tag red" id="tag-ch">Channel</span>
+            <span class="tag" id="tag-dur">—</span>
+            <span class="tag" id="tag-views">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quality -->
+      <div class="sec-label">Select Quality</div>
+      <div class="q-grid" id="q-grid"></div>
+
+      <!-- Format -->
+      <div class="sec-label">Output Format</div>
+      <div class="fmt-row">
+        <button class="fmt-btn sel" data-fmt="mp4" onclick="pickFmt(this,'mp4')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="4" width="20" height="16" rx="3" opacity=".3"/><path d="M10 9l6 3-6 3z"/></svg>
+          MP4 Video
+        </button>
+        <button class="fmt-btn" data-fmt="webm" onclick="pickFmt(this,'webm')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
+          WEBM
+        </button>
+        <button class="fmt-btn" data-fmt="mp3" onclick="pickFmt(this,'mp3')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13M9 18a3 3 0 01-3 3 3 3 0 01-3-3 3 3 0 013-3 3 3 0 013 3zm12-2a3 3 0 01-3 3 3 3 0 01-3-3 3 3 0 013-3 3 3 0 013 3z"/></svg>
+          MP3 Audio
+        </button>
+      </div>
+
+      <!-- Download -->
+      <button id="dl-btn" onclick="doDownload()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Now
+      </button>
+
+      <div class="status-msg" id="status-msg"></div>
+    </div>
+  </div>
+
+ </div><!-- /wrap -->
+
+<footer>
+  <p class="foot-text">
+    YTGrab is a personal-use local tool. Please respect content creators and
+    <a href="https://www.youtube.com/t/terms" target="_blank">YouTube's Terms of Service</a>.
+    Only download content you have permission to.
+  </p>
+</footer>
+
+<script>
+// ────── CONFIG ──────
+// If opened via http://localhost:3737 (correct way), API calls are relative.
+// If opened as file:// (double-click), fall back to absolute URL.
+const API = (location.protocol === 'http:' && location.hostname === 'localhost')
+  ? ''                        // same origin — no prefix needed
+  : 'http://localhost:3737';  // cross-origin fallback
+
+let selQ = '720p';
+let selFmt = 'mp4';
+let vidData = null;
+
+const QUALS = [
+  { res: '360p', name: 'Standard',  chip: 'sd',  label: 'SD' },
+  { res: '480p', name: 'Enhanced',  chip: 'sd',  label: 'SD+' },
+  { res: '720p', name: 'HD',        chip: 'hd',  label: 'HD' },
+  { res: '1080p', name: 'Full HD',  chip: 'fhd', label: 'FHD' },
+];
+
+// ────── CHECK BACKEND ──────
+async function checkBackend() {
+  try {
+    const res = await fetch(API + '/ping', { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      document.getElementById('conn-pill').style.display = 'inline-flex';
+    }
+  } catch(e) {
+    // Server not running — pill stays hidden, demo mode will kick in
+  }
+}
+checkBackend();
+
+// ────── PASTE ──────
+async function pasteURL() {
+  try {
+    const t = await navigator.clipboard.readText();
+    document.getElementById('url-input').value = t;
+  } catch(e) {
+    document.getElementById('url-input').focus();
+  }
+}
+
+// ────── VALIDATE ──────
+function isYT(url) {
+  return /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))[\w-]{11}/.test(url);
+}
+
+function showErr(msg) {
+  const b = document.getElementById('error-box');
+  document.getElementById('error-txt').textContent = msg;
+  b.style.display = 'flex';
+}
+
+function hideErr() {
+  document.getElementById('error-box').style.display = 'none';
+}
+
+// ────── FETCH VIDEO ──────
+async function fetchVideo() {
+  const url = document.getElementById('url-input').value.trim();
+  hideErr();
+
+  if (!url) { showErr('Please paste a YouTube URL first.'); return; }
+  if (!isYT(url)) { showErr('That doesn\'t look like a valid YouTube URL. It should contain "youtube.com/watch?v=" or "youtu.be/".'); return; }
+
+  const btn = document.getElementById('fetch-btn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  document.getElementById('result-panel').style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/info?url=${encodeURIComponent(url)}`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    vidData = data;
+    renderResult(data, url);
+  } catch(e) {
+    // Demo mode — show UI without real data
+    renderDemo(url);
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+function renderDemo(url) {
+  const id = url.match(/(?:v=|youtu\.be\/)([^&?]+)/)?.[1] || '';
+  vidData = {
+    title: 'Your video title will appear here once the backend is running',
+    uploader: 'YouTube Creator',
+    duration: 0,
+    view_count: 0,
+    thumbnail: id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : '',
+    _demo: true
+  };
+  renderResult(vidData, url);
+}
+
+function renderResult(data, url) {
+  document.getElementById('vid-title').textContent = data.title || 'Unknown Title';
+  document.getElementById('tag-ch').textContent = data.uploader || data.channel || 'Unknown Channel';
+  document.getElementById('tag-dur').textContent = fmtDur(data.duration);
+  document.getElementById('tag-views').textContent = fmtViews(data.view_count);
+
+  const img = document.getElementById('thumb-img');
+  const ph  = document.getElementById('thumb-ph');
+  const thumb = data.thumbnail || (url.match(/(?:v=|youtu\.be\/)([^&?]+)/)?.[1]
+    ? `https://img.youtube.com/vi/${url.match(/(?:v=|youtu\.be\/)([^&?]+)/)[1]}/mqdefault.jpg` : '');
+
+  if (thumb) {
+    img.src = thumb;
+    img.style.display = 'block';
+    ph.style.display = 'none';
+    img.onerror = () => { img.style.display = 'none'; ph.style.display = 'flex'; };
+  }
+
+  buildQGrid(data);
+  document.getElementById('result-panel').style.display = 'block';
+  document.getElementById('result-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function buildQGrid(data) {
+  const grid = document.getElementById('q-grid');
+  grid.innerHTML = '';
+  QUALS.forEach(q => {
+    const div = document.createElement('div');
+    div.className = `q-card ${q.res === selQ ? 'selected' : ''}`;
+    div.innerHTML = `
+      <div class="q-res">${q.res}</div>
+      <div class="q-name">${q.name}</div>
+      <span class="q-chip ${q.chip}">${q.label}</span>
+    `;
+    div.onclick = () => {
+      document.querySelectorAll('.q-card').forEach(c => c.classList.remove('selected'));
+      div.classList.add('selected');
+      selQ = q.res;
+    };
+    grid.appendChild(div);
+  });
+}
+
+function pickFmt(btn, fmt) {
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  selFmt = fmt;
+}
+
+// ────── DOWNLOAD ──────
+async function doDownload() {
+  const url = document.getElementById('url-input').value.trim();
+  const sm  = document.getElementById('status-msg');
+
+  sm.className = 'status-msg ok';
+  sm.innerHTML = `⏳ &nbsp;Downloading <b>${selQ} ${selFmt.toUpperCase()}</b>…`;
+
+  if (vidData?._demo) {
+    sm.className = 'status-msg warn';
+    sm.innerHTML = `⚠️ &nbsp;Backend not running. Follow the setup guide below to start your local server first.`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/download?url=${encodeURIComponent(url)}&quality=${selQ}&format=${selFmt}`);
+    const data = await res.json();
+    sm.innerHTML = `✅ &nbsp;Download started! File saving to <b>${data.file || 'your Downloads folder'}</b>`;
+  } catch(e) {
+    sm.className = 'status-msg warn';
+    sm.innerHTML = `⚠️ &nbsp;Could not connect to backend. Make sure <code>node server.js</code> is running.`;
+  }
+}
+
+// ────── HELPERS ──────
+function fmtDur(s) {
+  if (!s) return '—';
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
+}
+function fmtViews(n) {
+  if (!n) return '—';
+  if (n >= 1e9) return (n/1e9).toFixed(1)+'B views';
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M views';
+  if (n >= 1e3) return Math.round(n/1e3)+'K views';
+  return n+' views';
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = orig, 1600);
+  });
+}
+
+function copyServerCode() {
+  const code = `// YTGrab Backend Server (server.js)
+const express = require('express');
+const { exec } = require('child_process');
+const path = require('path');
+const os = require('os');
+
+const app = express();
+const PORT = 3737;
+
+// Serve index.html when browser visits http://localhost:3737
+app.use(express.static(path.join(__dirname)));
+
+// Health check — website uses this to detect if server is running
+app.get('/ping', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// GET /info?url=<youtube-url> — fetch video info
+app.get('/info', (req, res) => {
+  const url = req.query.url;
+  if (!url) return res.status(400).json({ error: 'No URL provided' });
+  exec(\`yt-dlp --dump-json --no-playlist --no-warnings "\${url}"\`, { timeout: 30000 }, (err, stdout, stderr) => {
+    if (err) return res.status(500).json({ error: 'Could not fetch video info. Is yt-dlp installed?' });
+    try { res.json(JSON.parse(stdout)); }
+    catch(e) { res.status(500).json({ error: 'Failed to parse video data' }); }
+  });
+});
+
+// GET /download?url=...&quality=720p&format=mp4 — download video
+app.get('/download', (req, res) => {
+  const { url, quality, format } = req.query;
+  if (!url) return res.status(400).json({ error: 'No URL' });
+
+  const qualityMap = {
+    '360p':  'bestvideo[height<=360]+bestaudio/best[height<=360]',
+  '480p':  'bestvideo[height<=480]+bestaudio/best[height<=480]',
+  '720p':  'bestvideo[height<=720]+bestaudio/best[height<=720]',
+  '1080p': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
+  };
+
+  const isAudio  = format === 'mp3';
+  const ytFormat = isAudio ? 'bestaudio/best' : (qualityMap[quality] || qualityMap['720p']);
+  const ext      = isAudio ? 'mp3' : 'mp4';
+  const outPath  = path.join(os.homedir(), 'Downloads', \`YTGrab_\${Date.now()}.\${ext}\`);
+
+  const audioFlags = isAudio ? '-x --audio-format mp3 --audio-quality 0' : '--merge-output-format mp4';
+  const cmd = \`yt-dlp -f "\${ytFormat}" \${audioFlags} -o "\${outPath}" --no-warnings "\${url}"\`;
+
+  res.json({ message: 'Download started!', file: outPath });
+  exec(cmd, { timeout: 600000 }, (err) => {
+    if (err) console.error('Download failed:', err.message);
+    else console.log('Saved:', outPath);
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(\`\\n✅ YTGrab running! Open: http://localhost:\${PORT}\\n\`);
+});`;
+
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('server-copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = 'Copy All', 1600);
+  });
+}
+
+// Enter to fetch
+document.getElementById('url-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') fetchVideo();
+});
+</script>
+</body>
+</html>
