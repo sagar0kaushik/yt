@@ -836,18 +836,10 @@ async function fetchVideo() {
     const res = await fetch(`${API}/info?url=${encodeURIComponent(url)}`);
     if (!res.ok) throw new Error('Server error');
     vidData = await res.json();
+    vidData._demo = false;
     renderResult(vidData, url);
-  } catch {
-    // Demo mode when server not reachable
-    const id = url.match(/(?:v=|youtu\.be\/)([^&?]+)/)?.[1] || '';
-    vidData = {
-      title: 'Connect your server to see real video info here',
-      uploader: 'YouTube Channel',
-      duration: 0, view_count: 0,
-      thumbnail: id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : '',
-      _demo: true
-    };
-    renderResult(vidData, url);
+  } catch(e) {
+    showErr('Could not fetch video info. Server may be waking up (free plan) — wait 30 seconds and try again.');
   } finally {
     btn.classList.remove('loading');
     btn.disabled = false;
@@ -902,9 +894,9 @@ function pickFmt(btn, fmt) {
 function doDownload() {
   const sm = document.getElementById('status-msg');
 
-  if (vidData?._demo) {
+  if (!vidData || !currentVidUrl) {
     sm.className = 'status-msg warn';
-    sm.innerHTML = `⚠️ &nbsp;Could not load video info. Please paste the URL again and click Fetch first.`;
+    sm.innerHTML = `⚠️ &nbsp;Please paste a YouTube URL and click "Fetch Video Info" first.`;
     return;
   }
 
